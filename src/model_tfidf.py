@@ -1,12 +1,15 @@
 import os 
-from keras import Sequential, load_model, Dense, BatchNormalization, Dropout, Adam, EarlyStopping, ModelCheckpoint
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense, BatchNormalization, Dropout
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-def build_tfidf_model(input_dim, dropout_rate=0.4):
+def build_tfidf_model(input_dim, dropout_rate=0.5):
     model = Sequential([
-        Dense(256, activation='relu', input_dim=input_dim),
+        Dense(128, activation='relu', input_dim=input_dim),
         BatchNormalization(),
         Dropout(dropout_rate),
-        Dense(128, activation='relu'),
+        Dense(64, activation='relu'),
         BatchNormalization(),
         Dropout(dropout_rate),
         Dense(1, activation='sigmoid')
@@ -25,7 +28,7 @@ def train_tfidf(model, X_train, y_train, X_val, y_val, epochs=10, batch_size=64,
     
     history = model.fit(
        X_train, y_train,
-       validation_split=(X_val, y_val),
+       validation_data=(X_val, y_val),
        epochs=epochs,
        batch_size=batch_size,
        callbacks=callbacks,

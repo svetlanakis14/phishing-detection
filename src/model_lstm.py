@@ -1,5 +1,8 @@
 import os
-from keras import Sequential, load_model, Dense, Dropout, Adam, EarlyStopping, ModelCheckpoint, Embedding, LSTM, Bidirectional
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense, Dropout, Embedding, LSTM, Bidirectional
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 def build_lstm_model(vocab_size, embedding_dim = 128, lstm_units = 64, max_seq_length = 200, dropout_rate = 0.3):
     model = Sequential([
