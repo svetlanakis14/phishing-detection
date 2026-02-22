@@ -4,9 +4,12 @@ import re
 
 from sklearn.feature_extraction.text import TfidfVectorizer;
 from sklearn.model_selection import train_test_split
+from keras import Tokenizer, pad_sequences
 import pickle
 
 MAX_FEATURES = 10000
+MAX_VOCABULARY = 10000
+MAX_LENGTH = 200
 
 def load_dataset():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -65,6 +68,26 @@ def build_tfidf(train_texts, test_texts, max_features = MAX_FEATURES, save_path=
          pickle.dump(vectorizer, f)
 
 def load_vectorizer(path):
+    with open (path, 'rb') as f:
+        return pickle.load(f)
+    
+def build_lstm(train_texts, max_vocab=MAX_VOCABULARY, save_path=None):
+    tokenizer = Tokenizer(num_words=max_vocab, oov_token='<OOV>')
+    tokenizer.fit_on_texts(train_texts)
+
+    if save_path:
+       os.makedirs(os.path.dirname(save_path), exist_ok=True)
+       with open(save_path, 'wb') as f:
+         pickle.dump(tokenizer, f)
+    
+    return tokenizer
+
+def padding(texts, tokenizer, max_len=MAX_LENGTH):
+    sequences = tokenizer.texts_to_sequences(texts)
+    padded = pad_sequences(sequences, max_len, padding='post', truncating='post')
+    return padded 
+
+def load_tokenizer(path):
     with open (path, 'rb') as f:
         return pickle.load(f)
 
