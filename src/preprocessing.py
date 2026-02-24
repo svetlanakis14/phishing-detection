@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import re
-
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from sklearn.feature_extraction.text import TfidfVectorizer;
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.preprocessing.text import Tokenizer

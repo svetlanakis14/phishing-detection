@@ -1,26 +1,29 @@
 import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout, Embedding, LSTM, Bidirectional
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import Input
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-def build_lstm_model(vocab_size, embedding_dim = 128, lstm_units = 64, max_seq_length = 200, dropout_rate = 0.3):
+def build_lstm_model(vocab_size, embedding_dim = 128, lstm_units = 64, max_seq_length = 200, dropout_rate = 0.5):
     model = Sequential([
-        Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_seq_length, mask_zero=True),
-        Bidirectional(LSTM(lstm_units, dropout=dropout_rate, recurrent_dropout=0.2)),
+        Input(shape=(max_seq_length,)),
+        Embedding(input_dim=vocab_size, output_dim=embedding_dim, mask_zero=True),
+        Bidirectional(LSTM(lstm_units, dropout=dropout_rate)),
         Dropout(dropout_rate),
-        Dense(64, activation='relu'),
+        Dense(32, activation='relu'),
         Dropout(dropout_rate / 2),
         Dense(1, activation='sigmoid')
     ])
 
-    model.compile(optimizer=Adam(learning_rate=0.001), loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 
 def train_lstm_model(model, X_train, y_train, X_val, y_val, epochs=10, batch_size=64, checkpoint_dir=None):
     
-    callbacks = [EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True, verbose=1)]
+    callbacks = [EarlyStopping(monitor='val_loss', patience=1, restore_best_weights=True, verbose=1)]
 
     if checkpoint_dir:
         os.makedirs(checkpoint_dir, exist_ok=True)
