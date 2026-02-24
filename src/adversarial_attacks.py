@@ -9,7 +9,7 @@ SYNONYM_MAP = {
 }
 
 
-def character_swap_attack(text, swap_prob = 0.15):
+def character_swap_attack(text, swap_prob = 0.4):
     char_map = {'l': '1', 'o': '0', 'a': '@', 'e': '3', 'i': '!'}
     words  = text.split()
     result = []
@@ -18,7 +18,7 @@ def character_swap_attack(text, swap_prob = 0.15):
         if rng.random() < swap_prob and len(word) > 3:
             new_word = ''
             for ch in word:
-                new_word += char_map.get(ch, ch) if rng.random() < 0.4 else ch
+                new_word += char_map.get(ch, ch) if rng.random() < 0.7 else ch
             result.append(new_word)
         else:
             result.append(word)
@@ -26,8 +26,16 @@ def character_swap_attack(text, swap_prob = 0.15):
 
 
 def synonym_attack(text):
-    words  = text.split()
-    result = [SYNONYM_MAP.get(w, w) for w in words]
+    words = text.split()
+    result = []
+
+    for w in words:
+        w_clean = w.lower().strip(".,!?")
+        if w_clean in SYNONYM_MAP:
+            result.append(SYNONYM_MAP[w_clean])
+        else:
+            result.append(w)
+
     return ' '.join(result)
 
 

@@ -3,10 +3,10 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from preprocessing import (load_dataset, initial_cleaning, preprocess_texts, split_data, build_tfidf, build_lstm, padding, encode_labels, MAX_VOCABULARY, MAX_LENGTH)
 from model_tfidf import (build_tfidf_model, train_tfidf, save_tfidf)
 from model_lstm import (build_lstm_model, train_lstm_model, save_lstm_model)
-from evaluation import (plot_history, evaluate_model)
+from evaluation import (plot_history, evaluate_model, plot_comparison_bar)
+from adversarial_attacks import (apply_adversarial_attacks)
 import matplotlib
 matplotlib.use('Agg') 
-import matplotlib.pyplot as plt
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR = os.path.join(BASE_DIR, 'src')
@@ -14,10 +14,14 @@ RESULTS_DIR = os.path.join(BASE_DIR, 'results')
 MODELS_DIR = os.path.join(RESULTS_DIR, 'models')
 TFIDF_DIR = os.path.join(MODELS_DIR, 'tfidf')
 LSTM_DIR = os.path.join(MODELS_DIR, 'lstm')
+TFIDF_ATTACK_DIR = os.path.join(TFIDF_DIR, 'attacks')
+LSTM_ATTACK_DIR  = os.path.join(LSTM_DIR, 'attacks')
     
 def main():
    os.makedirs(MODELS_DIR, exist_ok=True)
    os.makedirs(RESULTS_DIR, exist_ok=True)
+   os.makedirs(TFIDF_ATTACK_DIR, exist_ok=True)
+   os.makedirs(LSTM_ATTACK_DIR, exist_ok=True)
 
    df = load_dataset()
    df = initial_cleaning(df)
@@ -63,6 +67,27 @@ def main():
   
    print('\nPRE ATTACK: LSTM evaluation')
    lstm_metrics = evaluate_model(lstm_model, X_test_seq, y_test, model_name='lstm', metrics_path=os.path.join(LSTM_DIR, 'lstm_metrics.json'), cm_path=os.path.join(LSTM_DIR, 'lstm_confusion_matrix.png'))
+
+   print('\n ATTACKING: ')
+   attacked = apply_adversarial_attacks(test['clean_text'].tolist())
+
+   for attack_name, attack_texts in attacked.items():
+    print(f"\n  Attack: {attack_name}")
+
+    X_att_tfidf = vectorizer.transform(attack_texts)
+
+    evaluate_model(tfidf_model, X_att_tfidf.toarray(), y_test, model_name=f'tfidf_{attack_name}', metrics_path=os.path.join(TFIDF_ATTACK_DIR, f'tfidf_{attack_name}_metrics.json'), cm_path=os.path.join(TFIDF_ATTACK_DIR, f'tfidf_{attack_name}_confusion_matrix.png'))
+
+    X_att_seq = padding(attack_texts, tokenizer)
+
+    evaluate_model(lstm_model, X_att_seq, y_test, model_name=f'lstm_{attack_name}', metrics_path=os.path.join(LSTM_ATTACK_DIR, f'lstm_{attack_name}_metrics.json'), cm_path=os.path.join(LSTM_ATTACK_DIR, f'lstm_{attack_name}_confusion_matrix.png'))
+
+    all_metrics = []
+
+    all_metrics.append(tfidf_metrics)
+    all_metrics.append(lstm_metrics)
+
+    plot_comparison_bar(all_metrics, save_path=os.path.join(RESULTS_DIR, 'all_models_comparison.png'))
 
 if __name__ == "__main__":
     main()
